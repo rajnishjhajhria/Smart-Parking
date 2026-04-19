@@ -1,16 +1,23 @@
-# 🚗 Smart Parking Management System — C++ Backend
+# 🚗 Smart Parking Management System
 
-A full parking management system with a **native C++ HTTP server** and HTML/CSS/JS frontend.
-**No external libraries. No frameworks. Pure C++ sockets.**
+A full parking management system with a **native C++ HTTP server** and an **HTML/CSS/Vanilla JS** frontend.
+
+This project includes:
+- Slot allotment and status tracking
+- Reservation and cancellation
+- Vehicle unpark with ticket generation
+- Fee calculation by parked duration
+- Real-time dashboard refresh
 
 ---
 
 ## 📁 Project Structure
-
+smart-parking/
 ```
 smart-parking/
 │
 ├── backend/                       ← C++ server
+│   ├── make.cmd                   ← Windows-friendly make wrapper
 │   ├── main.cpp                   ← Entry point, socket loop, all API routes
 │   ├── Makefile                   ← Build system
 │   └── include/
@@ -18,6 +25,7 @@ smart-parking/
 │       ├── http_server.h          ← HTTP parsing, response builder, JSON utils
 │       └── router.h               ← URL pattern router with :param support
 │
+│   ├── assets/                    ← Logo + background images
 └── frontend/                      ← Browser UI
     ├── index.html                 ← HTML skeleton
     ├── css/
@@ -31,8 +39,10 @@ smart-parking/
 ---
 
 ## ⚙️ Build & Run
-
-### Requirements
+- `g++` with C++17 support (`g++ --version`)
+- One of the following for frontend serving:
+    - Node.js (`npx serve`), or
+    - Python 3 (`python -m http.server`)
 - Linux / macOS
 - `g++` with C++17 support (`g++ --version`)
 
@@ -41,6 +51,15 @@ smart-parking/
 ```bash
 cd backend
 make          # compile
+
+#### Windows (this repo setup)
+
+```powershell
+cd backend
+make run
+```
+
+The repository includes `backend/make.cmd`, so `make run` works in this workspace terminal setup.
 make run      # compile + start server on port 3001
 ```
 
@@ -56,11 +75,9 @@ The frontend uses ES modules, so it must be served (not opened as file://).
 ```bash
 # Option A — Python (built-in, no install)
 cd frontend
-python3 -m http.server 5500
+python -m http.server 5500
 
 # Option B — Node.js
-npx serve frontend -p 5500
-or
 cd frontend
 npx serve . -p 5500
 
@@ -70,12 +87,28 @@ npx serve . -p 5500
 
 Open **http://localhost:5500** in your browser.
 
+Note: If port `5500` is already in use, `serve` may auto-select a different port.
+
+---
+
+## ✅ Quick Health Checks
+
+```bash
+# backend health
+curl http://localhost:3001/health
+
+# level stats
+curl http://localhost:3001/api/stats?level=1
+```
+
 ---
 
 ## 🔌 REST API Reference
 
 | Method   | Endpoint              | Description                         |
 |----------|-----------------------|-------------------------------------|
+| `GET`    | `/`                   | Basic API info                      |
+| `GET`    | `/health`             | Health check                        |
 | `GET`    | `/api/slots`          | All slots (`?level=1` to filter)    |
 | `GET`    | `/api/slots/:id`      | Single slot with vehicle details    |
 | `GET`    | `/api/stats`          | Occupancy counts (`?level=1`)       |
@@ -86,35 +119,13 @@ Open **http://localhost:5500** in your browser.
 | `GET`    | `/api/vehicles`       | List vehicles (`?search=plate`)     |
 | `GET`    | `/api/tickets`        | List all generated tickets          |
 
-### Example cURL calls
-
-```bash
-# Park a vehicle
-curl -X POST http://localhost:3001/api/park \
-  -H "Content-Type: application/json" \
-  -d '{"plate":"DL 9ZZ 0001","type":"SUV","slotId":"P1-01"}'
-
-# Get Level 1 stats
-curl http://localhost:3001/api/stats?level=1
-
-# Remove vehicle by slot
-curl -X POST http://localhost:3001/api/unpark \
-  -H "Content-Type: application/json" \
-  -d '{"slotId":"P1-02"}'
-
-# Reserve a slot
-curl -X POST http://localhost:3001/api/reserve \
-  -H "Content-Type: application/json" \
-  -d '{"slotId":"P1-03","plate":"MH 04 XY 1234","time":"14:00"}'
-```
-
 ---
 
 ## 🧱 C++ Architecture
 
 ```
 main.cpp
- ├── POSIX TCP socket (AF_INET / SOCK_STREAM)
+ ├── TCP socket server loop (platform-aware: Windows/Linux)
  ├── parse_request()     — reads raw HTTP, splits headers/body/query
  ├── build_response()    — writes HTTP/1.1 response with CORS headers
  ├── Router              — matches path patterns, extracts :params
@@ -141,6 +152,14 @@ include/router.h
 
 ---
 
+## 🧠 System Notes
+
+- Data is **in-memory** (no DB), so server restart resets runtime state.
+- Slot pricing is currently fixed at `₹40/hour` with minimum billable duration.
+- Full conceptual explanation is available in `SYSTEM_EXPLAINED.md`.
+
+---
+
 ## 💡 How to Extend
 
 | Goal                    | Where to change                                  |
@@ -158,8 +177,8 @@ include/router.h
 
 | Layer    | Technology            |
 |----------|-----------------------|
-| Backend  | C++17, POSIX sockets  |
+| Backend  | C++17, raw sockets    |
 | HTTP     | Hand-rolled (main.cpp)|
 | Data     | In-memory (`std::map`)|
 | Frontend | HTML5, CSS3, Vanilla JS (ES Modules) |
-| Build    | GNU Make + g++        |
+| Build    | Makefile + g++        |
