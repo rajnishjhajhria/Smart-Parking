@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Parking — C++ Backend</title>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <img src="assets/logo.png" alt="Smart Parking logo"/>
+  </div>
+  <button class="nav-btn active" title="Dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+  </button>
+  <button class="nav-btn" id="btn-park" title="Park Vehicle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v10a2 2 0 0 1-2 2h-1"/><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+  </button>
+  <button class="nav-btn" id="btn-remove" title="Remove Vehicle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+  </button>
+  <button class="nav-btn" id="btn-vehicles" title="View Vehicles">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </button>
+  <div class="nav-divider"></div>
+  <div class="sidebar-bottom">
+    <button class="nav-btn" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 1.42 13.9M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    </button>
+    <button class="nav-btn" title="Logout">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="header">
+    <div>
+      <div class="header-title">Smart Parking Management System</div>
+      <div class="header-sub">C++ Backend &middot; Central Parking Tower &middot; Real-time</div>
+    </div>
+    <div class="header-right">
+      <div class="api-status" id="api-status">
+        <span class="api-dot"></span><span class="api-label">Connecting…</span>
+      </div>
+      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+      <div class="time-display" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <div class="level-bar">
+    <span class="level-label">Floor</span>
+    <button class="level-tab active" data-level="1">Level 1</button>
+    <button class="level-tab"        data-level="2">Level 2</button>
+    <button class="level-tab"        data-level="3">Level 3</button>
+    <button class="level-tab"        data-level="4">Level 4</button>
+  </div>
+
+  <div class="content">
+    <!-- LEFT -->
+    <div class="left-panel">
+      <div class="top-bar">
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--lime)"></div>Available</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Occupied</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Reserved</div>
+        </div>
+        <span style="font-size:11px;color:var(--muted)">Click a slot to select</span>
+      </div>
+
+      <div>
+        <div class="section-title">Parking Slots — Level <span id="lvl-label">1</span></div>
+        <div class="slots-grid" id="slots-grid">
+          <div class="loading-state" style="grid-column:1/-1;padding:40px 0">Connecting to C++ server…</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Reserve a Time Slot</div>
+        <div class="timeslot-bar">
+          <div class="date-nav">
+            <button id="date-prev">&#8249;</button>
+            <span class="today" id="date-label">Today</span>
+            <button id="date-next">&#8250;</button>
+          </div>
+        </div>
+        <div class="timeslots" id="timeslots"></div>
+      </div>
+
+      <div>
+        <div class="section-title">Quick Actions</div>
+        <div class="action-bar">
+          <button class="action-btn" id="act-park">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7-7 7 7"/></svg>Park Vehicle
+          </button>
+          <button class="action-btn" id="act-ticket">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5v2M15 11v2M15 17v2M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 1 0 0-4V7a2 2 0 0 1 2-2z"/></svg>Gen Ticket
+          </button>
+          <button class="action-btn" id="act-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search
+          </button>
+          <button class="action-btn" id="act-reserve">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Reserve
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-panel">
+      <div class="stats-area">
+        <div class="section-title" style="margin-bottom:0">Live Status</div>
+        <div class="radial-wrap">
+          <div class="radial">
+            <svg width="96" height="96" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="var(--surface3)" stroke-width="8"/>
+              <circle cx="50" cy="50" r="42" fill="none" stroke="var(--lime)" stroke-width="8"
+                data-arc stroke-dasharray="263.9" stroke-dashoffset="200"
+                stroke-linecap="round"
+                style="transition:stroke-dashoffset .8s ease;filter:drop-shadow(0 0 6px var(--lime))"/>
+            </svg>
+            <div class="radial-center">
+              <div class="radial-num" id="stat-occ">—</div>
+              <div class="radial-lbl">Occupied</div>
+            </div>
+          </div>
+          <div class="stats-breakdown">
+            <div class="stat-row"><span class="stat-label">Total</span><span class="stat-val" id="stat-total">—</span></div>
+            <div class="mini-bar"><div class="mini-bar-fill" style="width:100%;background:var(--surface3)"></div></div>
+            <div class="stat-row"><span class="stat-label avail">Available</span><span class="stat-val" style="color:var(--lime)" id="stat-avail">—</span></div>
+            <div class="mini-bar"><div class="mini-bar-fill" id="bar-avail" style="background:var(--lime)"></div></div>
+            <div class="stat-row"><span class="stat-label occ">Occupied</span><span class="stat-val" style="color:var(--red)" id="stat-occ2">—</span></div>
+            <div class="mini-bar"><div class="mini-bar-fill" id="bar-occ" style="background:var(--red)"></div></div>
+            <div class="stat-row"><span class="stat-label res">Reserved</span><span class="stat-val" style="color:var(--amber)" id="stat-res">—</span></div>
+            <div class="mini-bar"><div class="mini-bar-fill" id="bar-res" style="background:var(--amber)"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slot-detail">
+        <div class="section-title" style="margin-bottom:10px">Selected Slot</div>
+        <div class="detail-card" id="slot-detail-card">
+          <div class="detail-slot-id">—</div>
+          <div class="detail-status available">Select a slot</div>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <div class="search-wrap-inner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="search-input" placeholder="Search plate number…" autocomplete="off"/>
+        </div>
+      </div>
+
+      <div class="vehicle-list" id="vehicle-list">
+        <div class="loading-state">Loading…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Action</div>
+    <div class="modal-sub"   id="modal-sub">Fill in the details</div>
+    <div id="modal-body"></div>
+    <div class="modal-btns" id="modal-btns">
+      <button class="btn-cancel"  id="btn-cancel-modal">Cancel</button>
+      <button class="btn-confirm" id="btn-confirm-modal" onclick="window._submitModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toast-icon" class="toast-icon"></span>
+  <span id="toast-msg">Ready</span>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
