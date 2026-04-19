@@ -1,0 +1,16 @@
+# Build outputs
+backend/parking_server
+backend/parking_server.exe
+*.o
+*.obj
+*.out
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
