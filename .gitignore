@@ -12,5 +12,6 @@ backend/parking_server.exe
 node_modules/
 
 # OS/editor noise
+.vscode/
 .DS_Store
 Thumbs.db
